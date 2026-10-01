@@ -1,0 +1,11 @@
+# Scope detection OUTPUT
+
+define flow restrict scope
+  $scope_result = execute detect_scope
+
+  if not $scope_result.is_in_scope
+    bot refuse out of scope
+    stop
+
+define bot refuse out of scope
+  "Je suis un agent strictement dedie au code du travail. Je ne peux pas fournir une reponse hors de ce perimetre."

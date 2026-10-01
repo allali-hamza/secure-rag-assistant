@@ -1,0 +1,10 @@
+
+define flow restrict input scope
+  $scope_result = execute detect_input_scope(user_input=$user_message)
+
+  if not $scope_result.is_in_scope
+    bot refuse input out of scope
+    stop
+
+define bot refuse input out of scope
+  "Je suis un agent strictement dédié au code du travail. Je ne peux pas répondre à cette question."

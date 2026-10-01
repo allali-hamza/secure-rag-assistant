@@ -1,0 +1,24 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Tests / cache
+.pytest_cache/
+.cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Models / embeddings 
+config/models/
+config/database/.chroma_db/
+
+logs/
+
+todo.md
+prompts.md
+next_step.md
+afaire.txt
+*.local.md
+PIPELINE.md

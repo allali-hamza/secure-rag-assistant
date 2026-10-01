@@ -1,0 +1,13 @@
+# RAG support output detection
+# Verifie que la reponse finale est supportee par le contexte RAG fourni.
+
+define flow check rag support
+  $rag_support_result = execute check_rag_support
+  $bot_message = $rag_support_result.bot_message
+
+  if $rag_support_result.rag_support_failed
+    bot refuse ungrounded answer
+    stop
+
+define bot refuse ungrounded answer
+  "Je ne suis pas en mesure de confirmer cette reponse a partir des documents fournis."

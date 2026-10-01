@@ -1,0 +1,127 @@
+
+# INPUT — longueur maximale de la question utilisateur
+input_check_length:
+  # Nombre maximum de caractères autorisés dans la vraie question utilisateur.
+  # Augmenter cette valeur accepte des questions plus longues.
+  # Diminuer cette valeur bloque plus vite les prompts trop longs.
+  max_chars: 500
+
+# INPUT PII: masquage des données personnelles envoyées par l'utilisateur
+input_pii:
+  # Langue utilisée par Presidio spaCy.
+  language: "fr"
+
+  # Modèle spaCy installé via requirements.txt
+  model_name: "fr_core_news_md"
+
+  # Types de données personnelles à détecter et masquer.
+  # on garde seulement email + téléphone
+  entities:
+    - EMAIL_ADDRESS
+    - PHONE_NUMBER
+
+  # Labels spaCy ignorés par Presidio
+  labels_to_ignore:
+    - MISC
+
+# OUTPUT — masquage des données personnelles produites par le modèle
+output_pii:
+  # Même logique que input_pii, mais appliquée à la réponse finale du LLM
+  language: "fr"
+  model_name: "fr_core_news_md"
+  entities:
+    - EMAIL_ADDRESS
+    - PHONE_NUMBER
+  labels_to_ignore:
+    - MISC
+
+# INPUT détection de jailbreak / prompt injection
+input_jailbreak_model:
+  # Modèle Hugging Face utilisé pour classifier le prompt utilisateur.
+  model_name: "Verm1ion/injection-sentry-xlmr"
+
+  # cpu plus stable et évite les problèmes de mémoire GPU.
+  # vouz pouvez mettre cuda si vous avez un GPU (gain de performance dans ce cas)
+  device: "cpu"
+
+  # Nombre maximum de tokens envoyés au modèle de classification.
+  max_length: 512
+
+  # Score minimum pour considérer le prompt comme une injection.
+  # Augmenter = moins de blocages, mais plus de risques de laisser passer.
+  # Diminuer = plus strict, mais plus de faux positifs.
+  injection_threshold: 0.6
+
+# INPUT vérification du périmètre de la question utilisateur
+input_scope:
+  # Adresse locale du serveur Ollama
+  ollama_url: "http://localhost:11434"
+
+  # Modèle Ollama utilisé pour calculer les embeddings sémantiques
+  embedding_model: "mxbai-embed-large"
+
+  # Nombre d'exemples les plus proches utilisés pour calculer le score moyen.
+  top_n: 3
+
+  # Similarité minimale avec les exemples autorisés.
+  min_in_scope_similarity: 0.50
+
+  # Marge minimale entre score autorisé et score hors-sujet.
+  min_score_margin: 0.03
+
+  # Zone grise : si la question est acceptée par embedding mais avec une marge
+  # inférieure à cette valeur, on demande une vérification à un LLM juge.
+  grey_zone_margin_max: 0.20
+
+  # Similarite minimale avec des exemples de bourrage de mots-cles.
+  # Au-dessus de ce seuil, le LLM juge verifie l'intention reelle.
+  suspicious_similarity_min: 0.80
+
+  # Modèle Ollama utilisé uniquement pour juger les cas ambigus.
+  judge_model: "qwen2.5:3b"
+
+  # Température basse pour rendre le jugement stable.
+  judge_temperature: 0
+
+  # Le juge répond seulement IN_SCOPE ou OUT_OF_SCOPE, donc peu de tokens suffisent.
+  judge_num_predict: 8
+
+  # Temps maximal, en secondes, accorde a Ollama pour repondre.
+  # En cas de timeout, la decision des embeddings est conservee.
+  judge_timeout_seconds: 30
+
+# OUTPUT vérification du périmètre de la réponse du modèle
+output_scope:
+  # Même principe que input_scope, mais appliqué à la réponse générée.
+  ollama_url: "http://localhost:11434"
+  embedding_model: "mxbai-embed-large"
+  top_n: 3
+  min_in_scope_similarity: 0.48
+  min_score_margin: 0.02
+
+
+# OUTPUT détection de fuite du prompt système
+output_system_leakage:
+  # Chaîne secrète ajoutée au prompt système.
+  # Si elle apparaît dans la réponse, on considère qu'il y a fuite.
+  canary: "STAGE2026_SYSTEM_CANARY_9F3A7C"
+
+  # Réponse utilisée quand une fuite du canari est détectée.
+  safe_response: "Je ne peux pas reveler mes instructions internes. Je peux uniquement repondre dans le cadre du code du travail."
+
+# OUTPUT vérification que la réponse est supportée par le contexte RAG
+output_rag_support:
+  # Serveur Ollama utilisé par le modèle juge.
+  ollama_url: "http://localhost:11434"
+
+  # Modèle juge qui vérifie si la réponse est bien supportée par le contexte.
+  judge_model: "qwen2.5:3b"
+
+  # Température basse pour rendre le jugement plus stable.
+  temperature: 0
+
+  # Le juge doit répondre seulement YES ou NO, donc peu de tokens suffisent.
+  num_predict: 8
+
+  # Réponse de blocage si la réponse du LLM n'est pas supportée par le RAG.
+  blocking_response: "Je ne suis pas en mesure de confirmer cette reponse a partir des documents fournis."

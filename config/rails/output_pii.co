@@ -1,0 +1,6 @@
+# PII leakage output
+define flow output mask pii
+  # On exécute le masquage sur le message généré par le bot
+  $pii_result = execute output_mask_pii
+  $bot_message = $pii_result.bot_message
+  

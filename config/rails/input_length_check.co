@@ -1,0 +1,15 @@
+define flow check prompt length
+  # Appel de l'action Python corrigée
+  $is_valid_length = execute check_input_length
+  
+  # Si False, on bloque
+  if not $is_valid_length
+    bot refuse because too long
+    stop
+
+define bot refuse because too long
+  "Désolé, votre message est trop long. Veuillez formuler une question plus courte."
+
+
+
+

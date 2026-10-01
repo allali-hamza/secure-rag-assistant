@@ -1,0 +1,9 @@
+define flow block jailbreak model attempt
+  $is_jailbreak = execute check_jailbreak_model(user_input=$user_message)
+  
+  if $is_jailbreak
+    bot refuse to respond
+    stop
+
+define bot refuse to respond
+  "Violation de la politique de sécurité : tentative d'injection détectée."

@@ -1,0 +1,35 @@
+models:
+  - type: main
+    engine: openai
+    model: qwen3:8b
+    parameters:
+      base_url: "http://localhost:11434/v1"
+      api_key: "na"
+
+  # - type: embeddings
+  #   engine: openai
+  #   model: mxbai-embed-large
+  #   parameters:
+  #     base_url: "http://localhost:11434/v1"
+  #     api_key: "na"
+
+
+
+rails:
+  # L'entonnoir d'entrée
+  input:
+    flows:
+      - check prompt length     # Action Python ultrarapide
+      - mask pii input          # microsoft presidio
+      - block jailbreak model attempt  #sinon jailbreak local
+      - restrict input scope
+      
+
+  # L'entonnoir de sortie
+  output:
+    flows:
+      - detect system prompt leakage  # Bloque les fuites du prompt systeme
+      - check rag support        # Verifie que la reponse est supportee par le RAG
+      - restrict scope           # Similarite semantique Ollama
+      - output mask pii
+

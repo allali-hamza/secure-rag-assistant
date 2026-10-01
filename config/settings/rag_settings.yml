@@ -1,0 +1,55 @@
+
+# Emplacements de la base documentaire et de l'index vectoriel
+database:
+  # Dossier contenant les fichiers Markdown utilisés comme base documentaire.
+  db_dir: "config/database"
+
+  # Dossier où ChromaDB stocke l'index vectoriel local.
+  # Si les documents changent, il peut être nécessaire de supprimer ce dossier pour réindexer.
+  chroma_dir: "config/database/.chroma_db"
+
+  # Nom de la collection ChromaDB.
+  collection_name: "simple_rag"
+
+
+# Modèle d'embedding Ollama
+ollama:
+  # Adresse du serveur Ollama local
+  url: "http://localhost:11434"
+
+  # Modèle utilisé pour créer les embeddings des chunks et des questions.
+  embedding_model: "mxbai-embed-large"
+
+
+# Découpage des documents en chunks
+chunking:
+  # Taille maximale d'un chunk en caractères.
+  # Augmenter = chunks plus grands, plus de contexte mais moins précis.
+  # Diminuer = chunks plus petits, plus précis mais parfois incomplets.
+  chunk_size: 1000
+
+  # Nombre de caractères répétés entre deux chunks voisins.
+  # Sert à éviter de couper une information importante entre deux chunks.
+  chunk_overlap: 150
+
+# Recherche hybride : vectorielle + BM25
+retrieval:
+  # Nombre de chunks récupérés avec la recherche vectorielle.
+  vector_top_k: 5
+
+  # Nombre de chunks récupérés avec BM25.
+  bm25_top_k: 5
+
+  # Score minimal accepté pour les résultats vectoriels.
+  # Augmenter = plus strict, moins de bruit, mais risque de manquer des sources.
+  # Diminuer = plus de résultats, mais plus de bruit.
+  min_similarity: 0.7
+
+  # Taille maximale du contexte injecté dans le prompt final.
+  # Sert à éviter d'envoyer trop de texte au LLM.
+  max_context_chars: 5000
+
+# Messages du RAG
+messages:
+  # Message utilisé quand aucune source pertinente n'est trouvée.
+  no_context: "Aucune source pertinente n'a été trouvée dans les documents pour répondre à cette question."

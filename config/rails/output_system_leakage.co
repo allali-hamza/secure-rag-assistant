@@ -1,0 +1,10 @@
+
+define flow detect system prompt leakage
+  $leakage_result = execute detect_system_prompt_leakage
+
+  if $leakage_result.leakage_detected
+    bot refuse system prompt leakage
+    stop
+
+define bot refuse system prompt leakage
+  "Je ne peux pas reveler mes instructions internes. Je peux uniquement repondre dans le cadre du code du travail."

@@ -1,0 +1,28 @@
+# Guardrails et acces au LLM local
+nemoguardrails
+openai
+ollama
+
+# PII et NLP francais
+presidio-analyzer
+presidio-anonymizer
+spacy
+fr-core-news-md==3.8.0
+
+# Detection de jailbreak
+transformers
+torch
+
+# RAG
+chromadb
+langchain-core
+langchain-text-splitters
+rank-bm25
+
+# Configuration et calcul
+PyYAML
+numpy
+
+# Tests
+pytest
+pytest-asyncio
