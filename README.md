@@ -1,80 +1,80 @@
 # Security LLM Guardrails
 
-Projet autour d'un LLM local protege par NeMo Guardrails, avec un RAG
-local sur des documents de droit du travail francais.
+A project built around a local LLM protected by NeMo Guardrails, with local RAG
+over French labor law documents.
 
-Le pipeline est :
+The pipeline works as follows:
 
-1. `app.py` recupere un contexte RAG avec `rag.py`.
-2. Le prompt enrichi est envoye a NeMo Guardrails.
-3. Les rails d'entree filtrent la question utilisateur.
-4. Le modele local genere une reponse avec Ollama.
-5. Les rails de sortie verifient la reponse avant affichage.
+1. `app.py` retrieves RAG context using `rag.py`.
+2. The enriched prompt is sent to NeMo Guardrails.
+3. Input rails filter the user's question.
+4. The local model generates a response using Ollama.
+5. Output rails check the response before it is displayed.
 
-## Prerequis
+## Prerequisites
 
-- Ubuntu/Debian recommande ;
-- Git ;
-- Ollama ;
-- une connexion Internet au premier lancement pour telecharger les dependances
-  et les modeles.
+- Ubuntu/Debian recommended;
+- Git;
+- Ollama;
+- an Internet connection on the first run to download dependencies
+  and models.
 
-<span style="color:red"><strong>Important : utiliser Python 3.10 a 3.13. Python 3.14 n'est pas compatible avec NeMo Guardrails.</strong></span>
+<span style="color:red"><strong>Important: use Python 3.10 to 3.13. Python 3.14 is not compatible with NeMo Guardrails.</strong></span>
 
-Les modeles LLM peuvent occuper plusieurs gigaoctets.
+LLM models can take up several gigabytes of disk space.
 
-## Installation manuelle (installation automatique disponible plus bas)
+## Manual installation (automatic installation available below)
 
-### 1. Cloner le projet
+### 1. Clone the project
 
 ```bash
-git clone <URL_DU_DEPOT_GITLAB>
+git clone <GITLAB_REPOSITORY_URL>
 cd stage2026-security-LLM
 ```
 
-### 2. Installer les dependances systeme
+### 2. Install system dependencies
 
-Sous Ubuntu/Debian :
+On Ubuntu/Debian:
 
 ```bash
 sudo apt update
 sudo apt install python3 python3-venv python3-dev curl build-essential
 ```
 
-### 3. Installer Ollama
+### 3. Install Ollama
 
-Sous Linux :
+On Linux:
 
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ollama --version
 ```
 
-Si le service Ollama n'est pas actif :
+If the Ollama service is not running:
 
 ```bash
 ollama serve
 ```
 
-Verifier que le serveur repond :
+Check that the server responds:
 
 ```bash
 curl http://localhost:11434/api/tags
 ```
 
-Pour Windows ou macOS, utiliser l'installateur officiel :
+For Windows or macOS, use the official installer:
 
 https://ollama.com/download
 
-### 4. Creer l'environnement Python
+### 4. Create the Python environment
 
-Verifier d'abord la version de Python :
+First, check the Python version:
 
 ```bash
 python3 --version
 ```
 
-La version doit etre comprise entre Python 3.10 et Python 3.13.
+The version must be between Python 3.10 and Python 3.13.
 
 ```bash
 python3 -m venv .venv
@@ -82,18 +82,18 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-Si l'installation echoue avec une erreur de quota ou d'espace disque dans `/tmp`,
-creer un dossier temporaire dans le projet et demander a pip de l'utiliser :
+If installation fails with a quota or disk space error in `/tmp`,
+create a temporary directory in the project and tell pip to use it:
 
 ```bash
 mkdir -p tmp
 TMPDIR=$(pwd)/tmp python -m pip install -r requirements.txt --cache-dir=$(pwd)/tmp
 ```
 
-Cette situation peut arriver si la partition `/tmp` est trop petite pour les
-gros paquets Python telecharges pendant l'installation.
+This can happen if the `/tmp` partition is too small for the
+large Python packages downloaded during installation.
 
-### 5. Telecharger les modeles Ollama
+### 5. Download the Ollama models
 
 ```bash
 ollama pull qwen3:8b
@@ -102,134 +102,134 @@ ollama pull mxbai-embed-large
 ollama list
 ```
 
-Role des modeles :
+Model roles:
 
-- `qwen3:8b` : modele principal de generation, declare dans
-  `config/config.yml` ;
-- `qwen2.5:3b` : modele juge pour certains controles, notamment le support RAG
-  et les cas ambigus du scope input ;
-- `mxbai-embed-large` : modele d'embedding utilise par le RAG, le scope input
-  et le scope output.
+- `qwen3:8b`: the main generation model, declared in
+  `config/config.yml`;
+- `qwen2.5:3b`: the judge model for certain checks, including RAG support
+  and ambiguous input scope cases;
+- `mxbai-embed-large`: the embedding model used by RAG, input scope checks,
+  and output scope checks.
 
-### 6. Lancer l'application
+### 6. Run the application
 
 ```bash
 python app.py
 ```
 
-Pour tester une autre question, modifier la variable `user_prompt` dans
-`app.py`. Pour modifier le comportement global du modele, modifier
-`system_prompt` dans `app.py`.
+To test another question, edit the `user_prompt` variable in
+`app.py`. To change the model's overall behavior, edit
+`system_prompt` in `app.py`.
 
-## Architecture du pipeline
+## Pipeline architecture
 
-### RAG externe
+### External RAG
 
-Le RAG est execute avant NeMo Guardrails, directement dans `app.py`.
-La fonction `retrieve_context(user_prompt)` construit un contexte a partir des
-documents presents dans `config/database`.
+RAG runs before NeMo Guardrails, directly in `app.py`.
+The `retrieve_context(user_prompt)` function builds context from the
+documents in `config/database`.
 
-La recherche est hybride :
+Retrieval is hybrid:
 
-- recherche vectorielle avec ChromaDB et `mxbai-embed-large` ;
-- recherche lexicale BM25 avec `rank-bm25`.
+- vector search with ChromaDB and `mxbai-embed-large`;
+- BM25 lexical search with `rank-bm25`.
 
-Les parametres du RAG sont dans :
+RAG settings are in:
 
 ```text
 config/settings/rag_settings.yml
 ```
 
-Ce fichier permet de modifier les parametres simples sans toucher au code
-complexe : taille des chunks, `top_k`, seuil de similarite, taille maximale du
-contexte, chemins de stockage.
+This file lets you adjust basic settings without editing complex code:
+chunk size, `top_k`, similarity threshold, maximum context size,
+and storage paths.
 
 ### NeMo Guardrails
 
-La configuration principale est dans :
+The main configuration is in:
 
 ```text
 config/config.yml
 ```
 
-Les flows Colang sont dans :
+Colang flows are in:
 
 ```text
 config/rails/
 ```
 
-Les actions Python appelees par les flows sont dans :
+The Python actions called by the flows are in:
 
 ```text
 config/actions/
 ```
 
-Les rails d'entree actifs sont :
+The active input rails are:
 
-- `check prompt length` : bloque les prompts trop longs ;
-- `mask pii input` : masque les emails et numeros de telephone ;
-- `block jailbreak model attempt` : detecte les tentatives de jailbreak avec
-  `Verm1ion/injection-sentry-xlmr` ;
-- `restrict input scope` : verifie que la question concerne le droit du travail
-  francais avec embeddings Ollama, puis LLM-as-judge uniquement en zone grise.
+- `check prompt length`: blocks prompts that are too long;
+- `mask pii input`: masks email addresses and phone numbers;
+- `block jailbreak model attempt`: detects jailbreak attempts using
+  `Verm1ion/injection-sentry-xlmr`;
+- `restrict input scope`: checks whether the question concerns French labor
+  law using Ollama embeddings, then uses an LLM as a judge only for borderline cases.
 
-Les rails de sortie actifs sont :
+The active output rails are:
 
-- `detect system prompt leakage` : detecte la fuite du canari systeme ;
-- `check rag support` : verifie avec `qwen2.5:3b` que la reponse est supportee
-  par le contexte RAG ;
-- `restrict scope` : verifie que la reponse reste dans le perimetre ;
-- `output mask pii` : masque les PII dans la reponse finale.
+- `detect system prompt leakage`: detects leakage of the system canary;
+- `check rag support`: uses `qwen2.5:3b` to check that the response is supported
+  by the RAG context;
+- `restrict scope`: checks that the response stays within scope;
+- `output mask pii`: masks personally identifiable information (PII) in the final response.
 
-Les parametres des rails sont centralises dans :
+Rail settings are centralized in:
 
 ```text
 config/settings/rails_settings.yml
 ```
 
-La section de fin explique comment changer les modeles et les parametres sans
-modifier le code Python.
+The final section explains how to change models and settings without
+editing the Python code.
 
 ## Tests
 
-Les tests utilisent `pytest`. 
+The tests use `pytest`.
 
-Options utiles :
+Useful options:
 
-- `-v` affiche le nom de chaque test ;
-- `-s` affiche les logs et les `print` du pipeline pendant l'execution.
+- `-v` displays the name of each test;
+- `-s` displays pipeline logs and `print` output during execution.
 
-Lancer tous les tests :
+Run all tests:
 
 ```bash
 python -m pytest tests/ -v
 ```
 
-Lancer tous les tests avec les logs visibles :
+Run all tests with visible logs:
 
 ```bash
 python -m pytest tests/ -v -s
 ```
 
-Lancer uniquement les tests unitaires :
+Run only the unit tests:
 
 ```bash
 python -m pytest tests/unit -v
 ```
 
-Lancer uniquement les tests du pipeline complet :
+Run only the full pipeline tests:
 
 ```bash
 python -m pytest tests/pipeline -v -s
 ```
 
-Lancer uniquement une rail precise, par exemple la rail de jailbreak input :
+Test a specific rail, such as the input jailbreak rail:
 
 ```bash
 python -m pytest tests/unit/test_input_jailbreak.py -v -s
 ```
 
-Autres exemples utiles :
+Other useful examples:
 
 ```bash
 python -m pytest tests/unit/test_input_scope.py -v -s
@@ -238,72 +238,72 @@ python -m pytest tests/unit/test_output_rag_support.py -v -s
 python -m pytest tests/unit/test_output_system_leakage.py -v -s
 ```
 
-Les tests du dossier `tests/pipeline` executent le pipeline complet avec RAG,
-NeMo Guardrails et rails actifs. Ils servent surtout a verifier que le pipeline
-fonctionne de bout en bout.
+The tests in `tests/pipeline` run the full pipeline with RAG,
+NeMo Guardrails, and active rails. Their main purpose is to check that the
+pipeline works end to end.
 
-### Limites
+### Limitations
 
-Certains tests unitaires servent aussi a documenter les limites actuelles des
-modeles utilises dans le POC. Ils peuvent donc echouer meme si le pipeline
-principal fonctionne.
+Some unit tests also document the current limitations of the
+models used in the proof of concept (POC). They may therefore fail even if the main
+pipeline works.
 
-Le test limite de `output_rag_support` sur l'equivalence entre `quinze jours`
-et `deux semaines` peut echouer parce que le juge `qwen2.5:3b` est un petit
-modele. Il peut refuser une reformulation numerique pourtant correcte.
+The `output_rag_support` edge case test for equivalence between `quinze jours`
+(fifteen days) and `deux semaines` (two weeks) may fail because the `qwen2.5:3b`
+judge is a small model. It may reject an otherwise valid numerical paraphrase.
 
-Certains tests de jailbreak peuvent aussi echouer parce que le modele de
-detection n'est pas entraine specifiquement sur ce domaine et sur toutes les
-formulations possibles en francais.
+Some jailbreak tests may also fail because the detection model
+is not specifically trained for this domain or for every possible
+phrasing in French.
 
-## Structure du projet
+## Project structure
 
 ```text
 .
-├── app.py                         # Point d'entree principal du POC
-├── rag.py                         # RAG externe : recherche vectorielle + BM25
-├── requirements.txt               # Dependances Python du projet
-├── setup.sh                       # Installation automatique
-├── utils/                         # Fonctions utilitaires : logs console et logger
+├── app.py                         # Main entry point for the POC
+├── rag.py                         # External RAG: vector search + BM25
+├── requirements.txt               # Project Python dependencies
+├── setup.sh                       # Automatic installation
+├── utils/                         # Utility functions: console logs and logger
 ├── config/
-│   ├── config.yml                 # Configuration NeMo Guardrails
-│   ├── actions/                   # Actions Python appelees par les rails
-│   ├── rails/                     # Flows Colang (.co)
-│   ├── settings/                  # Parametres simples modifiables
-│   │   ├── rag_settings.yml       # Parametres du RAG
-│   │   └── rails_settings.yml     # Parametres des rails
-│   └── database/                  # Documents Markdown utilises par le RAG
+│   ├── config.yml                 # NeMo Guardrails configuration
+│   ├── actions/                   # Python actions called by the rails
+│   ├── rails/                     # Colang flows (.co)
+│   ├── settings/                  # Basic configurable settings
+│   │   ├── rag_settings.yml       # RAG settings
+│   │   └── rails_settings.yml     # Rail settings
+│   └── database/                  # Markdown documents used by RAG
 └── tests/
-    ├── unit/                      # Tests rail par rail
-    └── pipeline/                  # Tests du pipeline complet
+    ├── unit/                      # Tests for individual rails
+    └── pipeline/                  # Full pipeline tests
 ```
 
-## Installation automatique
+## Automatic installation
 
-Une installation automatique est disponible avec `setup.sh` :
+Automatic installation is available through `setup.sh`:
 
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
 
-Par defaut, `setup.sh` installe Python si besoin, cree le `.venv`, installe les
-dependances, installe Ollama si necessaire et telecharge les modeles Ollama
-prevus pour ce POC :
+By default, `setup.sh` installs Python if needed, creates the `.venv`, installs
+dependencies, installs Ollama if necessary, and downloads the Ollama models
+used by this POC:
 
-- `qwen3:8b` ;
-- `qwen2.5:3b` ;
+- `qwen3:8b`;
+- `qwen2.5:3b`;
 - `mxbai-embed-large`.
 
-Si vous voulez utiliser vos propres modeles, utilisez plutot l'installation
-manuelle decrite plus haut : modifiez les fichiers de configuration, puis
-telechargez les modeles correspondants avec `ollama pull`.
+If you want to use your own models, follow the manual installation
+instructions above: edit the configuration files, then
+download the corresponding models with `ollama pull`.
 
-## Changer les modeles et les parametres
+## Changing models and settings
 
-Les modeles peuvent etre modifies sans changer le code Python.
+Models can be changed without editing the Python code.
 
-Le modele principal de generation se change dans `config/config.yml` :
+Change the main generation model in `config/config.yml`:
 
 ```yaml
 models:
@@ -311,28 +311,28 @@ models:
     model: qwen3:8b
 ```
 
-Apres modification, telecharger le modele Ollama correspondant :
+After making the change, download the corresponding Ollama model:
 
 ```bash
-ollama pull <nom-du-modele>
+ollama pull <model-name>
 ```
 
-Les modeles d'embedding se changent dans :
+Change the embedding models in:
 
 ```text
 config/settings/rag_settings.yml
 config/settings/rails_settings.yml
 ```
 
-Si le modele d'embedding du RAG est change, supprimer l'ancien index ChromaDB
-pour forcer une reindexation :
+If you change the RAG embedding model, delete the old ChromaDB index
+to force reindexing:
 
 ```bash
 rm -rf config/database/.chroma_db
 ```
 
-Les modeles juges utilises par certaines rails se changent dans
-`config/settings/rails_settings.yml` :
+Change the judge models used by certain rails in
+`config/settings/rails_settings.yml`:
 
 ```yaml
 input_scope:
@@ -342,21 +342,20 @@ output_rag_support:
   judge_model: "qwen2.5:3b"
 ```
 
-Les parametres simples du RAG se changent dans :
+Change basic RAG settings in:
 
 ```text
 config/settings/rag_settings.yml
 ```
 
-Ce fichier permet notamment de modifier la taille des chunks, le nombre de
-chunks recuperes, le seuil de similarite et la taille maximale du contexte.
+This file lets you adjust the chunk size, number of retrieved chunks,
+similarity threshold, and maximum context size.
 
-Les parametres simples des rails se changent dans :
+Change basic rail settings in:
 
 ```text
 config/settings/rails_settings.yml
 ```
 
-Ce fichier permet notamment de modifier les seuils, les modeles juges, les
-messages de blocage et les parametres des controles input/output.
-
+This file lets you adjust thresholds, judge models, blocking messages,
+and input/output check settings.
